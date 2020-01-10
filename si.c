@@ -4,7 +4,7 @@
 //as the destination rectangle to blit to. using a seperate local rect in the drawing code solves it.
 #include <stdlib.h>
 #include <stdio.h>
-#include "SDL/SDL.h"
+#include "SDL2/SDL.h"
 
 #define SCREEN_WIDTH 800 
 #define SCREEN_HEIGHT 600
@@ -84,6 +84,7 @@ struct bullet_t {
 
 //global variables, for convenience.
 static SDL_Surface *screen;
+static SDL_Window *window;
 static SDL_Surface *title_screen;
 static SDL_Surface *cmap;
 static SDL_Surface *invadersmap;
@@ -1216,10 +1217,10 @@ int load_image(char filename[], SDL_Surface **surface, enum ck_t colour_key) {
 		colourkey = SDL_MapRGB(temp->format, 0, 255, 0);
 	}
 
-	SDL_SetColorKey(temp, SDL_SRCCOLORKEY, colourkey);
+	SDL_SetColorKey(temp, SDL_TRUE, colourkey);
 
 	//convert the image surface to the same type as the screen
-	(*surface) = SDL_DisplayFormat(temp);
+	(*surface) = SDL_ConvertSurfaceFormat(temp, SDL_GetWindowPixelFormat(window), 0);
 	
 	if ((*surface) == NULL) {
 	
@@ -1234,7 +1235,7 @@ int load_image(char filename[], SDL_Surface **surface, enum ck_t colour_key) {
 
 //Main program
 int main() {
-	
+
 	/* Initialize SDL’s video system and check for errors */
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 
@@ -1245,17 +1246,19 @@ int main() {
 	/* Make sure SDL_Quit gets called when the program exits! */
 	atexit(SDL_Quit);
 	
-	/*set window title*/
-	SDL_WM_SetCaption("Space Invaders", "P");
-	
 	/* Attempt to set a 800x600 8 bit color video mode */
-	screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 8, SDL_DOUBLEBUF );
-	
-	if (screen == NULL) {
-		
+	window = SDL_CreateWindow("Space Invaders",
+                         SDL_WINDOWPOS_UNDEFINED,
+                         SDL_WINDOWPOS_UNDEFINED,
+                         SCREEN_WIDTH, SCREEN_HEIGHT,
+                         SDL_WINDOW_SHOWN);
+
+	if (window == NULL) {
 		printf("Unable to set video mode: %s\n", SDL_GetError());
 		return 1;
 	}
+
+	screen = SDL_GetWindowSurface( window );
 
 	//load images
 	load_image("titlescreen.bmp", &title_screen, magenta);
@@ -1269,7 +1272,7 @@ int main() {
 
 	Uint32 next_game_tick = SDL_GetTicks();
 	int sleep = 0;
-	Uint8 *keystate = 0;
+	const Uint8 *keystate = 0;
 	int quit = 0;
 	SDL_Event event;
 
@@ -1285,10 +1288,10 @@ int main() {
 		
 	/* Animate */
 	while (quit == 0) {
-		
+
 		/* Grab a snapshot of the keyboard. */
-		keystate = SDL_GetKeyState(NULL);
-		
+		keystate = SDL_GetKeyboardState(NULL);
+
 		while (SDL_PollEvent(&event)) {
 
 			switch(event.type) {
@@ -1374,16 +1377,15 @@ int main() {
 			
 			draw_title_screen();	
 			draw_string(s, (SCREEN_WIDTH / 2) - (strlen(s) * 10), 500);
-
 		} else if (state == game) {
 
 			//move player
-			if (keystate[SDLK_LEFT]) {
+			if (keystate[SDL_SCANCODE_LEFT]) {
 				
 				move_player(left);
 			}
 
-			if (keystate[SDLK_RIGHT]) {
+			if (keystate[SDL_SCANCODE_RIGHT]) {
 				
 				move_player(right);
 			}
@@ -1435,15 +1437,14 @@ int main() {
 		}
 
 		/* Ask SDL to update the entire screen. */
-		SDL_Flip(screen);
+		SDL_UpdateWindowSurface(window);
 
 		next_game_tick += 1000 / 30;
 		sleep = next_game_tick - SDL_GetTicks();
 	
 		if( sleep >= 0 ) {
-
-            		SDL_Delay(sleep);
-        	}
+			SDL_Delay(sleep);
+        }
 	}
 	
 	return 0;

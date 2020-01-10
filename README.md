@@ -3,12 +3,12 @@
 This is a recreation of the classic space invaders video game. Loosly based on the AtariST version by
 Robert HC Leong(1990)
 
-Implemented in the C programming language, using SDL library to display graphics on the screen.
+Implemented in the C programming language, using SDL2 library to display graphics on the screen.
 
-To compile you need to have SDL installed on your system and the header files
+To compile you need to have SDL2 installed on your system and the header files
 available to you operating systems PATH environment variable
 
-`gcc si.c -lSDL -o invaders`
+`gcc si.c -lSDL2 -o invaders`
 
 note that there is no sound added so far. the goal was to create a working complete version of the gameplay only
 
