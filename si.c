@@ -1444,7 +1444,7 @@ int main() {
 	
 		if( sleep >= 0 ) {
 			SDL_Delay(sleep);
-        }
+		}
 	}
 	
 	return 0;
