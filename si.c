@@ -754,9 +754,9 @@ void bullet_base_damage(struct base_t *base, int b_num, struct bullet_t *bullet,
     SDL_Rect dest;
                 
     SDL_LockSurface(base_img[b_num]);
-    Uint8 *raw_pixels;
+    Uint32 *raw_pixels;
 
-    raw_pixels = (Uint8 *) base_img[b_num]->pixels;
+    raw_pixels = (Uint32 *) base_img[b_num]->pixels;
     
     int pix_offset;
 
@@ -780,7 +780,7 @@ void bullet_base_damage(struct base_t *base, int b_num, struct bullet_t *bullet,
 
             //found part part of the base sprite that is NOT magenta(index)
             //searching from the bottom up
-            if (raw_pixels[pix_offset] != 227) {
+            if (raw_pixels[pix_offset] != 16711935) {
                     
                 bullet->alive = 0;
                 
@@ -824,7 +824,7 @@ void bullet_base_damage(struct base_t *base, int b_num, struct bullet_t *bullet,
         
             //found part part of the base sprite that is NOT magenta(index)
             //searching from the top down
-            if (raw_pixels[pix_offset] != 227) {
+            if (raw_pixels[pix_offset] != 16711935) {
                     
                 bullet->alive = 0;
             
@@ -1203,7 +1203,6 @@ int load_image(char filename[], SDL_Surface **surface, enum ck_t colour_key) {
     temp = SDL_LoadBMP(filename);
     
     if (temp == NULL) {
-    
         printf("Unable to load %s.\n", filename);
         return 1;
     }
@@ -1212,21 +1211,23 @@ int load_image(char filename[], SDL_Surface **surface, enum ck_t colour_key) {
 
     /* Set the image colorkey. */
     if (colour_key == magenta) {
-        
-        colourkey = SDL_MapRGB(temp->format, 255, 0, 255);
-    
+        colourkey = SDL_MapRGB(temp->format, 255, 0, 255); //hex: FF00FF, decimal: 16711935
     } else if (colour_key == lime) {
-    
-        colourkey = SDL_MapRGB(temp->format, 0, 255, 0);
+        colourkey = SDL_MapRGB(temp->format, 0, 255, 0); //hex: 00FF00, decimal: 65280
     }
+    //printf("%s\n", SDL_GetPixelFormatName(temp->format->format)); //temp->format is a struct of SDL_PixelFormat
 
     SDL_SetColorKey(temp, SDL_TRUE, colourkey);
 
     //convert the image surface to the same type as the screen
     (*surface) = SDL_ConvertSurfaceFormat(temp, SDL_GetWindowPixelFormat(window), 0);
+    // printf("%s\n", SDL_GetPixelFormatName(SDL_GetWindowPixelFormat(window)));
+    
+    void* pixels = (*surface)->pixels;
+    Uint32* typed = (Uint32*)(pixels);
+    printf("%s, \t\t%d, \t\t%d\n", filename, colourkey, typed[0]); // Getting 00F81F 63519 for lime color key
     
     if ((*surface) == NULL) {
-    
         printf("Unable to convert bitmap.\n");
         return 1;
     }
@@ -1276,6 +1277,7 @@ int main() {
     screen = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0, 0, 0, 0);
 
 
+
     //load images
     load_image("titlescreen.bmp", &title_screen, magenta);
     load_image("cmap.bmp", &cmap, magenta);
@@ -1304,7 +1306,7 @@ int main() {
         
     /* Animate */
     while (quit == 0) {
-
+        //printf("%d\n", rand());
         /* Grab a snapshot of the keyboard. */
         keystate = SDL_GetKeyboardState(NULL);
 
@@ -1386,8 +1388,8 @@ int main() {
             
                 for (i = 0; i < 60; i++) {
 
-                    SDL_FillRect(screen, &src[i], rand() % 255);
-
+                    SDL_FillRect(screen, &src[i], rand());
+                    //rand() outout examples: 1189280590, 856710119, 244161988, 920012957
                 }
             }
             
