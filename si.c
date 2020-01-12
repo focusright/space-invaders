@@ -87,6 +87,7 @@ static SDL_Surface *screen;
 static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
+
 static SDL_Surface *title_screen;
 static SDL_Surface *cmap;
 static SDL_Surface *invadersmap;
@@ -1249,18 +1250,31 @@ int main() {
     atexit(SDL_Quit);
     
     /* Attempt to set a 800x600 8 bit color video mode */
-    if( SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN, &window, &renderer) ) {
-        printf("Unable to create Window and Renderer: %s\n", SDL_GetError());
-        return 1;       
+    window = SDL_CreateWindow("Space Invaders",
+                         SDL_WINDOWPOS_UNDEFINED,
+                         SDL_WINDOWPOS_UNDEFINED,
+                         SCREEN_WIDTH, SCREEN_HEIGHT,
+                         SDL_WINDOW_SHOWN);
+
+    if (window == NULL) {
+        printf("Unable to create window: %s\n", SDL_GetError());
+        return 1;
     }
 
-    //window->title = "Space Invaders";
+    renderer = SDL_CreateRenderer(window, -1, 0);
 
     //screen = SDL_GetWindowSurface( window );
-    screen = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
-    //screen = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 8, 0, 0, 0, 0);
-    //texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX8, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+    SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
+    //texture = SDL_CreateTextureFromSurface(renderer, surface);
+    texture = SDL_CreateTexture(renderer,
+        SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_STREAMING,
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT);
+    screen = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0, 0, 0, 0);
+
 
     //load images
     load_image("titlescreen.bmp", &title_screen, magenta);
@@ -1440,8 +1454,15 @@ int main() {
 
         /* Ask SDL to update the entire screen. */
         //SDL_UpdateWindowSurface(window);
-        SDL_UpdateTexture(texture, NULL, screen->pixels, screen->pitch);
-        SDL_RenderClear(renderer);
+        void *pixels;
+        int pitch;
+        SDL_LockTexture(texture, NULL, &pixels, &pitch);
+        SDL_ConvertPixels(SCREEN_WIDTH, SCREEN_HEIGHT,
+            screen->format->format,
+            screen->pixels, screen->pitch,
+            SDL_PIXELFORMAT_RGBA8888,
+            pixels, pitch);
+        SDL_UnlockTexture(texture);
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
 
