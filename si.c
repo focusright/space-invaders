@@ -752,17 +752,17 @@ void bullet_base_damage(struct base_t *base, int b_num, struct bullet_t *bullet,
     int x,y;
     SDL_Rect src;
     SDL_Rect dest;
-                
+
     SDL_LockSurface(base_img[b_num]);
     Uint32 *raw_pixels;
 
     raw_pixels = (Uint32 *) base_img[b_num]->pixels;
-    
+
     int pix_offset;
 
     //bottom
     if (l == 0) {
-    
+
         //how far from the left did the bullet hit the base sprite
         x = (bullet->hitbox.x + 3) - base->hitbox.x;
 
@@ -781,7 +781,7 @@ void bullet_base_damage(struct base_t *base, int b_num, struct bullet_t *bullet,
             //found part part of the base sprite that is NOT magenta(index)
             //searching from the bottom up
             if (raw_pixels[pix_offset] != 16711935) {
-                    
+            printf("%d\n", raw_pixels[pix_offset]);
                 bullet->alive = 0;
                 
                 src.x = 0;
@@ -1210,22 +1210,23 @@ int load_image(char filename[], SDL_Surface **surface, enum ck_t colour_key) {
     Uint32 colourkey;
 
     /* Set the image colorkey. */
-    if (colour_key == magenta) {
-        colourkey = SDL_MapRGB(temp->format, 255, 0, 255); //hex: FF00FF, decimal: 16711935
-    } else if (colour_key == lime) {
-        colourkey = SDL_MapRGB(temp->format, 0, 255, 0); //hex: 00FF00, decimal: 65280
+    if (colour_key == magenta) { //magenta = hex: FF00FF, decimal: 16711935
+        colourkey = SDL_MapRGB(temp->format, 255, 0, 255);
+    } else if (colour_key == lime) { //lime = hex: 00FF00, decimal: 65280
+        colourkey = SDL_MapRGB(temp->format, 0, 255, 0);
     }
-    //printf("%s\n", SDL_GetPixelFormatName(temp->format->format)); //temp->format is a struct of SDL_PixelFormat
 
     SDL_SetColorKey(temp, SDL_TRUE, colourkey);
 
     //convert the image surface to the same type as the screen
     (*surface) = SDL_ConvertSurfaceFormat(temp, SDL_GetWindowPixelFormat(window), 0);
     // printf("%s\n", SDL_GetPixelFormatName(SDL_GetWindowPixelFormat(window)));
-    
+
+    const char* format = SDL_GetPixelFormatName(temp->format->format); //temp->format is a struct of SDL_PixelFormat
     void* pixels = (*surface)->pixels;
     Uint32* typed = (Uint32*)(pixels);
-    printf("%s, \t\t%d, \t\t%d\n", filename, colourkey, typed[0]); // Getting 00F81F 63519 for lime color key
+    printf("%s, \t%s, \t%d, \t%d\n", filename, format, colourkey, typed[5]); 
+    // Getting 00F81F 63519 for some magenta color keys due to different formats
     
     if ((*surface) == NULL) {
         printf("Unable to convert bitmap.\n");
