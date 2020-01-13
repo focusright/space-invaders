@@ -780,7 +780,7 @@ void bullet_base_damage(struct base_t *base, int b_num, struct bullet_t *bullet,
 
             //found part part of the base sprite that is NOT magenta(index)
             //searching from the bottom up
-            if (raw_pixels[pix_offset] != 16711935) {
+            if (raw_pixels[pix_offset] != -16711936) {
             printf("%d\n", raw_pixels[pix_offset]);
                 bullet->alive = 0;
                 
@@ -824,7 +824,7 @@ void bullet_base_damage(struct base_t *base, int b_num, struct bullet_t *bullet,
         
             //found part part of the base sprite that is NOT magenta(index)
             //searching from the top down
-            if (raw_pixels[pix_offset] != 16711935) {
+            if (raw_pixels[pix_offset] != -16711936) {
                     
                 bullet->alive = 0;
             
@@ -1209,20 +1209,22 @@ int load_image(char filename[], SDL_Surface **surface, enum ck_t colour_key) {
 
     Uint32 colourkey;
 
-    /* Set the image colorkey. */
-    if (colour_key == magenta) { //magenta = hex: FF00FF, decimal: 16711935
-        colourkey = SDL_MapRGB(temp->format, 255, 0, 255);
-    } else if (colour_key == lime) { //lime = hex: 00FF00, decimal: 65280
-        colourkey = SDL_MapRGB(temp->format, 0, 255, 0);
-    }
-
-    SDL_SetColorKey(temp, SDL_TRUE, colourkey);
-
     //convert the image surface to the same type as the screen
     (*surface) = SDL_ConvertSurfaceFormat(temp, SDL_GetWindowPixelFormat(window), 0);
-    // printf("%s\n", SDL_GetPixelFormatName(SDL_GetWindowPixelFormat(window)));
 
-    const char* format = SDL_GetPixelFormatName(temp->format->format); //temp->format is a struct of SDL_PixelFormat
+    /* Set the image colorkey. */
+    if (colour_key == magenta) { //magenta = hex: FF00FF, decimal: 16711935
+        colourkey = SDL_MapRGB((*surface)->format, 255, 0, 255);
+    } else if (colour_key == lime) { //lime = hex: 00FF00, decimal: 65280
+        colourkey = SDL_MapRGB((*surface)->format, 0, 255, 0);
+    }
+
+    SDL_SetColorKey(*surface, SDL_TRUE, colourkey);
+
+    //printf("%s\n", SDL_GetPixelFormatName(SDL_GetWindowPixelFormat(window)));
+
+    //const char* format = SDL_GetPixelFormatName(temp->format->format); //temp->format is a struct of SDL_PixelFormat
+    const char* format = SDL_GetPixelFormatName((*surface)->format->format);
     void* pixels = (*surface)->pixels;
     Uint32* typed = (Uint32*)(pixels);
     printf("%s, \t%s, \t%d, \t%d\n", filename, format, colourkey, typed[5]); 
